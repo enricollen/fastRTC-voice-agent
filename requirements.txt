@@ -1,0 +1,10 @@
+elevenlabs
+python-dotenv
+fastrtc
+loguru
+langchain-community
+ollama
+langgraph
+fastrtc[vad]
+python-soundfile
+soundfile
