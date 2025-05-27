@@ -2,8 +2,9 @@ elevenlabs
 python-dotenv
 fastrtc
 loguru
-langchain-community
 ollama
+langchain-community
+langchain-ollama
 langgraph
 fastrtc[vad]
 python-soundfile
