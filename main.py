@@ -1,16 +1,14 @@
 import argparse
 from typing import Generator, Tuple
-
 import numpy as np
+from loguru import logger
+from src.process_tts import process_elevenlabs_tts, process_elevenlabs_stt
+from src.agent import invoke as agent_invoke
 from fastrtc import (
     AlgoOptions,
     ReplyOnPause,
     Stream,
 )
-from loguru import logger
-
-from src.process_tts import process_elevenlabs_tts, process_elevenlabs_stt
-from src.agent import invoke as agent_invoke, agent_config
 
 logger.remove()
 logger.add(
@@ -33,16 +31,15 @@ def response(
     """
     logger.info("🎙️ Received audio input")
 
-    logger.debug("🔄 Transcribing audio with ElevenLabs...")
+    logger.debug("🔄 Transcribing audio...")
     transcript = process_elevenlabs_stt(audio)
-    logger.info(f'👂 Transcribed: "{transcript}"')
-
+    logger.info(f'👂 Transcribed: "{transcript}"')    
     logger.debug("🧠 Running agent...")
-    agent_response = agent_invoke(transcript, config=agent_config)
+    agent_response = agent_invoke(transcript)
     response_text = agent_response["messages"][-1]["content"]
     logger.info(f'💬 Response: "{response_text}"')
 
-    logger.debug("🔊 Generating speech with ElevenLabs...")
+    logger.debug("🔊 Generating speech...")
     yield from process_elevenlabs_tts(response_text)
 
 
@@ -66,11 +63,11 @@ def create_stream() -> Stream:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="FastRTC Groq Voice Agent")
+    parser = argparse.ArgumentParser(description="FastRTC Voice Agent")
     parser.add_argument(
         "--phone",
         action="store_true",
-        help="Launch with FastRTC phone interface (get a temp phone number)",
+        help="Launch with FastRTC phone interface (automatically provides a temporary phone number)",
     )
     args = parser.parse_args()
 

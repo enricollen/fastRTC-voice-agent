@@ -4,6 +4,10 @@ import numpy as np
 from dotenv import load_dotenv
 from elevenlabs.client import ElevenLabs
 from typing import Generator, Tuple
+load_dotenv()
+
+# ElevenLabs client
+elevenlabs = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
 
 def process_elevenlabs_tts(
     text: str,
@@ -25,8 +29,6 @@ def process_elevenlabs_tts(
     Yields:
         A single tuple of (sample_rate, audio_array) for audio playback
     """
-    load_dotenv()
-    elevenlabs = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
     
     # get the bytes directly from the generator
     audio = b"".join(elevenlabs.text_to_speech.convert(
@@ -73,8 +75,6 @@ def process_elevenlabs_stt(
     import io
     import soundfile as sf
 
-    load_dotenv()
-    elevenlabs = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
     # write audio to a BytesIO buffer as wav
     buf = io.BytesIO()
     sf.write(buf, audio[1].flatten(), audio[0], format="WAV")
