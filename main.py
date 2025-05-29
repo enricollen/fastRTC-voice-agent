@@ -2,8 +2,8 @@ import argparse
 from typing import Generator, Tuple
 import numpy as np
 from loguru import logger
-from src.process_tts import process_elevenlabs_tts, process_elevenlabs_stt
-from src.agent import invoke as agent_invoke
+from src.speech_service import SpeechService
+from src.agent import Agent
 from fastrtc import (
     AlgoOptions,
     ReplyOnPause,
@@ -16,6 +16,10 @@ logger.add(
     colorize=True,
     format="<green>{time:HH:mm:ss}</green> | <level>{level}</level> | <level>{message}</level>",
 )
+
+# Initialize services
+speech_service = SpeechService()
+agent = Agent()
 
 def response(
     audio: tuple[int, np.ndarray],
@@ -32,15 +36,16 @@ def response(
     logger.info("🎙️ Received audio input")
 
     logger.debug("🔄 Transcribing audio...")
-    transcript = process_elevenlabs_stt(audio)
-    logger.info(f'👂 Transcribed: "{transcript}"')    
+    transcript = speech_service.speech_to_text(audio)
+    logger.info(f'👂 Transcribed: "{transcript}"')
+    
     logger.debug("🧠 Running agent...")
-    agent_response = agent_invoke(transcript)
+    agent_response = agent.invoke(transcript)
     response_text = agent_response["messages"][-1]["content"]
     logger.info(f'💬 Response: "{response_text}"')
 
     logger.debug("🔊 Generating speech...")
-    yield from process_elevenlabs_tts(response_text)
+    yield from speech_service.text_to_speech(response_text)
 
 
 def create_stream() -> Stream:

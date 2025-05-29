@@ -1,75 +1,85 @@
+"""
+Agent module to coordinate conversation between user and AI.
+"""
 import os
-from loguru import logger
-from llama_index.llms.openrouter import OpenRouter
-from llama_index.core.llms import ChatMessage
-from langchain_ollama import ChatOllama
-from langchain_core.messages import HumanMessage, SystemMessage
-from dotenv import load_dotenv
 import yaml
 from pathlib import Path
+from loguru import logger
+from dotenv import load_dotenv
+from .llm_service import LLMService
+from .chat_history import ChatHistory
 
 load_dotenv()
 
-# get system prompt from yaml
-config_path = Path(__file__).parent.parent / "config" / "prompts.yaml"
-with open(config_path, 'r', encoding='utf-8') as f:
-    prompts_config = yaml.safe_load(f)
-    system_prompt = prompts_config['system_prompts']['chef_assistant']
-
-llm_mode = os.getenv("LLM_MODE", "cloud")
-
-if llm_mode == "cloud":
-    # dummy OpenAI API key is required for OpenRouter to work
-    if "OPENAI_API_KEY" not in os.environ:
-        os.environ["OPENAI_API_KEY"] = "dummy_value"
-
-    llm = OpenRouter(
-        api_key=os.getenv("OPENROUTER_API_KEY"),
-        max_tokens=4096,
-        context_window=32768,
-        model=os.getenv("CLOUD_LLM_MODEL", "qwen/qwq-32b:free") 
-    )
-else:
-    llm = ChatOllama(
-        model=os.getenv("LOCAL_LLM_MODEL", "llama3.1:8b"),
-        temperature=0.5,
-    )
-
-def invoke(input_text: str, config: dict = None):
+class Agent:
     """
-    Simple chat agent that processes the input and returns a response.
-    Uses either OpenRouter (cloud) or Ollama (local) for model inference.
-    
-    Args:
-        input_text: The user's input text
-        config: Optional configuration dictionary. Defaults to None.
-    
-    Returns:
-        dict: Response containing the messages
+    AI Agent that coordinates conversation flow between the user and LLM.
+    Manages system prompts, chat history, and LLM interactions.
     """
-    if config is None:
-        config = {"configurable": {"thread_id": "default_user"}}
 
-    logger.info(f'💭 Thinking about: "{input_text}"')
+    def __init__(self):
+        """Initialize the agent with necessary services and configuration."""
+        # get system prompt from yaml
+        config_path = Path(__file__).parent.parent / "config" / "prompts.yaml"
+        with open(config_path, 'r', encoding='utf-8') as f:
+            prompts_config = yaml.safe_load(f)
+            self.system_prompt = prompts_config['system_prompts']['chef_assistant']
+        
+        # initialize chat history and LLM
+        self.chat_history = ChatHistory(self.system_prompt)
+        self.llm_service = LLMService()
+        
+        logger.debug("Agent initialized with system prompt and services")
 
-    if llm_mode == "cloud":
-        messages = [
-            ChatMessage(role="system", content=system_prompt),
-            ChatMessage(role="user", content=input_text)
-        ]
-        response = llm.chat(messages)
-        assistant_response = response.message.content
-    else:
-        messages = [
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=input_text)
-        ]
-        response = llm.invoke(messages)
-        assistant_response = response.content
+    def invoke(self, input_text: str, config: dict = None):
+        """
+        Process user input and generate a response using the LLM.
+        
+        Args:
+            input_text: The user's input text
+            config: Optional configuration dictionary. Defaults to None.
+            
+        Returns:
+            dict: Response containing the messages
+        """
+        if config is None:
+            config = {"configurable": {"thread_id": "default_user"}}
+        
+        logger.info(f'💭 Thinking about: "{input_text}"')
+        
+        # get the current chat history
+        messages = self.chat_history.get_messages()
+        
+        # add the new user message for the LLM (not adding to history yet)
+        messages.append({"role": "user", "content": input_text})
+        
+        logger.debug(f"Context length: {len(messages)} messages")
+        
+        # generate response using the LLM
+        try:
+            assistant_response = self.llm_service.generate_response(messages)
+            
+            # update chat history with this last exchange
+            self.chat_history.add_exchange(input_text, assistant_response)
+            
+        except Exception as e:
+            logger.error(f"Error generating response: {str(e)}")
+            assistant_response = "Mi dispiace, ma ho un problema di connessione. Potresti ripetere la tua domanda?"
+            self.chat_history.add_exchange(input_text, assistant_response)
+        
+        # return formatted response
+        return {
+            "messages": [
+                {"role": "user", "content": input_text},
+                {"role": "assistant", "content": assistant_response}
+            ]
+        }
 
-    return {
-        "messages": [
-            {"role": "user", "content": input_text},
-            {"role": "assistant", "content": assistant_response}
-        ]
-    }
+    def clear_history(self):
+        """
+        Clear the chat history.
+        
+        Returns:
+            bool: True if history was cleared successfully
+        """
+        return self.chat_history.clear()
