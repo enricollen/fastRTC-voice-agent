@@ -1,6 +1,6 @@
 # FastRTC Voice Agent
 
-A voice-enabled AI assistant that can engage in natural conversations. The project combines FastRTC for real-time communication, ElevenLabs for speech synthesis/recognition, and Ollama for local LLM-powered agent.
+A voice-enabled AI assistant that can engage in natural conversations. The project combines FastRTC for real-time communication, ElevenLabs for speech synthesis/recognition, and LiteLLM for LLM-agnostic model support.
 
 ## Features
 
@@ -9,10 +9,16 @@ A voice-enabled AI assistant that can engage in natural conversations. The proje
 - Text-to-Speech (ElevenLabs)
 - Web interface or phone number access (Gradio)
 - Fully customizable assistant persona
+- LLM-agnostic: easily switch between OpenAI, Gemini, Ollama, and OpenRouter
+- Automatic fallback to alternative models if primary model fails
+- Session-based chat history for context-aware conversations
+- Clean, modular class-based architecture
 
 ## Prerequisites
 - ElevenLabs API key
+- API key for your preferred LLM provider (OpenAI, Gemini, or OpenRouter)
 - Microphone
+- For local models: Ollama installed and running
 
 ## How to use
 
@@ -34,9 +40,75 @@ A voice-enabled AI assistant that can engage in natural conversations. The proje
 
 4. Set up environment variables:
    ```bash
-   cp .env.example .env
-   # Edit .env and add your ELEVENLABS_API_KEY
+   cp .env-example .env
+   # Edit .env and add your API keys and model settings
    ```
+
+## Architecture
+
+The project follows a modular class-based design:
+
+- **Agent**: Coordinates conversation flow and manages the interaction between components
+- **LLMService**: Handles communication with different LLM providers through LiteLLM
+- **ChatHistory**: Manages conversation history and context
+- **SpeechService**: Handles both text-to-speech and speech-to-text using ElevenLabs
+
+## LLM Configuration
+
+This project uses LiteLLM to support multiple LLM providers. Configure your preferred model in the `.env` file:
+
+### Local Models with Ollama
+
+```
+LLM_MODE=local
+OLLAMA_MODEL=llama3.1:8b
+OLLAMA_API_BASE=http://localhost:11434
+```
+
+### Cloud Models
+
+For OpenAI:
+```
+LLM_MODE=cloud
+LLM_PROVIDER=openai
+OPENAI_API_KEY=your_key_here
+OPENAI_MODEL=gpt-3.5-turbo
+```
+
+For Google Gemini:
+```
+LLM_MODE=cloud
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-pro
+```
+
+For OpenRouter (access to many models):
+```
+LLM_MODE=cloud
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=your_key_here
+OPENROUTER_MODEL=qwen/qwq-32b:free
+```
+
+### Model Fallbacks
+
+You can specify fallback models in case your primary model fails:
+
+```
+LLM_FALLBACKS=gpt-3.5-turbo,ollama/llama3.1:8b
+```
+
+### Chat History
+
+The system maintains conversation context by storing recent messages in session memory. 
+You can configure how many messages to keep in the context:
+
+```
+MAX_HISTORY_MESSAGES=10
+```
+
+To clear the chat history during a conversation, just say "clear history", "reset chat", or "nuova conversazione".
 
 ## Running the Application
 
@@ -54,6 +126,14 @@ python main.py --phone
 
 1. The system captures your voice input
 2. Converts speech to text using ElevenLabs
-3. Generates a textual response with your local LLM using Ollama
+3. Sends the text to your configured LLM via LiteLLM
 4. Converts the response to speech using ElevenLabs
 5. Plays back the audio response
+
+## Extending the Project
+
+The modular design makes it easy to extend the project:
+
+- Add new LLM providers by extending the LLMService class
+- Support additional speech services by creating alternate implementations of SpeechService
+- Create custom agents with different behaviors by extending the Agent class
