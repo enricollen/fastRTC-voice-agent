@@ -9,3 +9,4 @@ langgraph
 fastrtc[vad]
 python-soundfile
 soundfile
+litellm
