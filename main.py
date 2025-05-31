@@ -2,7 +2,7 @@ import argparse
 from typing import Generator, Tuple
 import numpy as np
 from loguru import logger
-from src.speech_service import SpeechService
+from src.speech import SpeechService
 from src.agent import Agent
 from fastrtc import (
     AlgoOptions,
@@ -18,8 +18,11 @@ logger.add(
 )
 
 # Initialize services
-speech_service = SpeechService()
+speech_service = None  
 agent = Agent()
+voice_id = None  
+speed = 1.0  # just for kokoro
+tts_provider = "elevenlabs"  # default provider
 
 def response(
     audio: tuple[int, np.ndarray],
@@ -45,7 +48,16 @@ def response(
     logger.info(f'💬 Response: "{response_text}"')
 
     logger.debug("🔊 Generating speech...")
-    yield from speech_service.text_to_speech(response_text)
+    # set TTS parameters based on the active provider
+    tts_kwargs = {}
+    if voice_id:
+        tts_kwargs["voice_id"] = voice_id
+    
+    # add speed parameter only for kokoro
+    if tts_provider == "kokoro" and speed != 1.0:
+        tts_kwargs["speed"] = speed
+    
+    yield from speech_service.text_to_speech(response_text, **tts_kwargs)
 
 
 def create_stream() -> Stream:
@@ -74,8 +86,49 @@ if __name__ == "__main__":
         action="store_true",
         help="Launch with FastRTC phone interface (automatically provides a temporary phone number)",
     )
+    parser.add_argument(
+        "--tts", 
+        choices=["elevenlabs", "kokoro"], 
+        default="elevenlabs",
+        help="TTS provider to use (elevenlabs or kokoro)",
+    )
+    parser.add_argument(
+        "--voice", 
+        type=str, 
+        help="Voice ID/name to use (provider-specific, defaults to provider's default)",
+        default=None,
+    )
+    parser.add_argument(
+        "--speed",
+        type=float,
+        default=1.0,
+        help="Speech speed multiplier (only applicable for Kokoro TTS)",
+    )
     args = parser.parse_args()
 
+    # configuration in global variables
+    tts_provider = args.tts
+    
+    # Set default voice ID based on the TTS provider if not specified
+    if args.voice is None:
+        if args.tts == "elevenlabs":
+            voice_id = "JBFqnCBsd6RMkjVDRZzb"  # default elevenlabs voice id
+        else:  # kokoro
+            voice_id = "im_nicola"  # default kokoro voice
+    else:
+        voice_id = args.voice
+        
+    speed = args.speed
+    
+    speech_service = SpeechService(tts_provider=tts_provider)
+    
+    # info about the configuration
+    logger.info(f"🔊 Initialized speech service with {tts_provider} TTS provider")
+    if voice_id:
+        logger.info(f"Using voice: {voice_id}")
+    if tts_provider == "kokoro" and speed != 1.0:
+        logger.info(f"Speech speed: {speed}x")
+    
     stream = create_stream()
     logger.info("🎧 Stream handler configured")
 
