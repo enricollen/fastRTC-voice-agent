@@ -11,6 +11,7 @@ python-soundfile
 soundfile
 litellm
 groq
+openai
 # Kokoro TTS dependencies
 kokoro
 torch

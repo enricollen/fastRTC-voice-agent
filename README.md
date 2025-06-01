@@ -5,7 +5,7 @@ A voice-enabled AI assistant that can engage in natural conversations. The proje
 ## Features
 
 - Real-time voice conversations in multiple languages
-- Speech-to-Text (ElevenLabs)
+- Speech-to-Text (ElevenLabs, Groq, OpenAI)
 - Text-to-Speech (ElevenLabs)
 - Web interface or phone number access (Gradio)
 - Fully customizable assistant persona
@@ -17,6 +17,7 @@ A voice-enabled AI assistant that can engage in natural conversations. The proje
 ## Prerequisites
 - ElevenLabs API key
 - API key for your preferred LLM provider (OpenAI, Gemini, or OpenRouter)
+- Optional: Groq or OpenAI API key for speech-to-text
 - Microphone
 - For local models: Ollama installed and running
 
@@ -72,7 +73,7 @@ For OpenAI:
 LLM_MODE=cloud
 LLM_PROVIDER=openai
 OPENAI_API_KEY=your_key_here
-OPENAI_MODEL=gpt-3.5-turbo
+OPENAI_LLM_MODEL=gpt-3.5-turbo
 ```
 
 For Google Gemini:
@@ -109,6 +110,35 @@ MAX_HISTORY_MESSAGES=10
 ```
 
 To clear the chat history during a conversation, just say "clear history", "reset chat", or "nuova conversazione".
+
+## Speech-to-Text Configuration
+
+The project supports multiple STT providers:
+
+### ElevenLabs (default)
+```
+ELEVENLABS_API_KEY=your_elevenlabs_api_key
+ELEVENLABS_STT_LANGUAGE=en
+```
+
+### Groq
+```
+GROQ_API_KEY=your_groq_api_key
+GROQ_STT_MODEL=whisper-large-v3-turbo
+GROQ_STT_LANGUAGE=en
+```
+
+### OpenAI
+```
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_STT_MODEL=gpt-4o-transcribe
+OPENAI_STT_LANGUAGE=en
+```
+
+To select your preferred STT provider, set:
+```
+DEFAULT_STT_PROVIDER=elevenlabs  # or groq or openai
+```
 
 ## Running the Application
 

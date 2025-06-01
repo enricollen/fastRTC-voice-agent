@@ -8,7 +8,7 @@ from loguru import logger
 from dotenv import load_dotenv
 
 from .tts import ProviderTTS, ElevenLabsTTS, KokoroTTS
-from .stt import ProviderSTT, ElevenLabsSTT, GroqSTT
+from .stt import ProviderSTT, ElevenLabsSTT, GroqSTT, OpenAISTT
 
 load_dotenv()
 
@@ -17,7 +17,7 @@ class SpeechService:
     """
     handles all speech-related operations including text-to-speech and speech-to-text.
     supports multiple tts providers including elevenlabs and kokoro tts.
-    supports multiple stt providers including elevenlabs and groq.
+    supports multiple stt providers including elevenlabs, groq, and openai.
     """
 
     def __init__(self, tts_provider: str = "elevenlabs", stt_provider: str = "elevenlabs"):
@@ -26,7 +26,7 @@ class SpeechService:
         
         args:
             tts_provider: tts provider to use ("elevenlabs" or "kokoro")
-            stt_provider: stt provider to use ("elevenlabs" or "groq")
+            stt_provider: stt provider to use ("elevenlabs", "groq", or "openai")
         """
         # initialize tts providers
         self.tts_providers: Dict[str, ProviderTTS] = {
@@ -45,7 +45,8 @@ class SpeechService:
         # initialize stt providers
         self.stt_providers: Dict[str, ProviderSTT] = {
             "elevenlabs": ElevenLabsSTT(),
-            "groq": GroqSTT()
+            "groq": GroqSTT(),
+            "openai": OpenAISTT()
         }
         
         # set active stt provider
@@ -75,7 +76,7 @@ class SpeechService:
         change the active stt provider.
         
         args:
-            provider_name: name of the provider to use ("elevenlabs" or "groq")
+            provider_name: name of the provider to use ("elevenlabs", "groq", or "openai")
         """
         if provider_name.lower() not in self.stt_providers:
             logger.warning(f"unknown stt provider '{provider_name}', ignoring request")
@@ -150,9 +151,9 @@ class SpeechService:
             audio: tuple containing sample rate and audio data
             model_id: model id (provider-specific)
             language_code: language code (provider-specific)
-            prompt: optional prompt for context or spelling (groq only)
-            temperature: sampling temperature (groq only)
-            response_format: output format (groq only)
+            prompt: optional prompt for context or spelling (groq and openai only)
+            temperature: sampling temperature (groq and openai only)
+            response_format: output format (groq and openai only)
             diarize: whether to annotate who is speaking (elevenlabs only)
             tag_audio_events: tag audio events like laughter, applause, etc. (elevenlabs only)
             
@@ -177,7 +178,7 @@ class SpeechService:
                 "diarize": diarize,
                 "tag_audio_events": tag_audio_events
             })
-        elif self.stt_provider == "groq":
+        elif self.stt_provider in ["groq", "openai"]:
             provider_kwargs.update({
                 "prompt": prompt,
                 "temperature": temperature,

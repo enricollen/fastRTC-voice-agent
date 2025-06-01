@@ -42,7 +42,7 @@ def response(
     logger.debug("🔄 Transcribing audio...")
     # set STT parameters based on the active provider
     stt_kwargs = {}
-    if stt_provider == "groq":
+    if stt_provider in ["groq", "openai"]:
         stt_kwargs["response_format"] = "text"
         
     transcript = speech_service.speech_to_text(audio, **stt_kwargs)
@@ -100,9 +100,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--stt", 
-        choices=["elevenlabs", "groq"], 
+        choices=["elevenlabs", "groq", "openai"], 
         default="elevenlabs",
-        help="STT provider to use (elevenlabs or groq)",
+        help="STT provider to use (elevenlabs, groq, or openai)",
     )
     parser.add_argument(
         "--voice", 
