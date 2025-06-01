@@ -10,3 +10,8 @@ fastrtc[vad]
 python-soundfile
 soundfile
 litellm
+# Kokoro TTS dependencies
+kokoro
+torch
+espeakng-loader
+phonemizer-fork
