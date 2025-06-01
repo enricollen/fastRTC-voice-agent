@@ -10,6 +10,7 @@ fastrtc[vad]
 python-soundfile
 soundfile
 litellm
+groq
 # Kokoro TTS dependencies
 kokoro
 torch

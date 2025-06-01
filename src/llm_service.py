@@ -9,7 +9,7 @@ import litellm
 class LLMService:
     """
     Service for interacting with Language Models through LiteLLM.
-    Supports different providers like OpenAI, Gemini, Ollama, and OpenRouter.
+    Supports different providers like OpenAI, Gemini, Ollama, OpenRouter, and Groq.
     """
 
     def __init__(self):
@@ -22,8 +22,9 @@ class LLMService:
         self.model_mapping = {
             "openai": os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
             "ollama": os.getenv("OLLAMA_MODEL", "llama3.1:8b"),
-            "gemini": os.getenv("GEMINI_MODEL", "gemini-pro"),
+            "gemini": os.getenv("GEMINI_MODEL", "gemini-1.5-flash"),
             "openrouter": os.getenv("OPENROUTER_MODEL", "qwen/qwq-32b:free"),
+            "groq": os.getenv("GROQ_LLM_MODEL", "llama-3.1-8b-instant"),
         }
         
         # api base URLs
@@ -32,6 +33,7 @@ class LLMService:
             "ollama": os.getenv("OLLAMA_API_BASE", "http://localhost:11434"),
             "gemini": os.getenv("GEMINI_API_BASE", None),
             "openrouter": "https://openrouter.ai/api/v1",
+            "groq": os.getenv("GROQ_API_BASE", None),
         }
         
         # parse fallback models from environment
@@ -62,6 +64,8 @@ class LLMService:
             model = f"ollama/{model}"
         elif provider == "openrouter":
             model = f"openrouter/{model}"
+        elif provider == "groq":
+            model = f"groq/{model}"
         
         return model
 
@@ -91,11 +95,15 @@ class LLMService:
         if api_base:
             kwargs["api_base"] = api_base
         
-        # add API key if provider is OpenRouter
+        # add API key if provider is OpenRouter or Groq
         if provider == "openrouter":
             kwargs["api_key"] = os.getenv("OPENROUTER_API_KEY")
             # dummy OpenAI API key is required by OpenRouter
             os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY", "dummy_value")
+        elif provider == "groq":
+            # groq uses GROQ_API_KEY environment variable by default in litellm
+            if not os.getenv("GROQ_API_KEY"):
+                logger.warning("GROQ_API_KEY environment variable not set")
         
         logger.debug(f"Generating response with model: {self.model}")
         
@@ -121,4 +129,4 @@ class LLMService:
                     logger.error(f"Fallback model {fallback_model} failed: {str(fallback_error)}")
             
             # if all attempts fail ==> error message
-            return "Mi dispiace, ma ho un problema di connessione. Potresti ripetere la tua domanda?" 
+            return "mi dispiace, ma ho un problema di connessione. potresti ripetere la tua domanda?" 
