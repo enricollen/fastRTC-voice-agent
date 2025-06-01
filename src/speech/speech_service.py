@@ -56,6 +56,20 @@ class SpeechService:
             self.stt_provider = "elevenlabs"
             
         logger.debug(f"speech service initialized with {self.stt_provider} stt provider")
+        
+        # always preload tts model to reduce initial latency
+        self.preload_tts()
+
+    def preload_tts(self) -> None:
+        """
+        preload the active tts provider to reduce latency on first use.
+        """
+        provider = self.tts_providers[self.tts_provider]
+        if not hasattr(provider, 'initialized') or not provider.initialized:
+            logger.info(f"preloading {self.tts_provider} tts model...")
+            provider.initialize()
+            provider.initialized = True
+            logger.info(f"{self.tts_provider} tts model preloaded successfully")
 
     def set_tts_provider(self, provider_name: str) -> None:
         """
@@ -70,6 +84,9 @@ class SpeechService:
             
         self.tts_provider = provider_name.lower()
         logger.debug(f"changed tts provider to {self.tts_provider}")
+        
+        # preload the new provider
+        self.preload_tts()
 
     def set_stt_provider(self, provider_name: str) -> None:
         """
@@ -115,7 +132,7 @@ class SpeechService:
             
         provider = self.tts_providers[self.tts_provider]
         
-        # lazy initialization of provider
+        # model should already be initialized, but check just in case
         if not hasattr(provider, 'initialized') or not provider.initialized:
             provider.initialize()
             provider.initialized = True
