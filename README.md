@@ -1,27 +1,27 @@
-# FastRTC Voice Agent
+# 🎙️ FastRTC Voice Agent
 
-A voice-enabled AI assistant that can engage in natural conversations. The project combines FastRTC for real-time communication, ElevenLabs for speech synthesis/recognition, and LiteLLM for LLM-agnostic model support.
+A model-agnostic voice-enabled AI assistant that can engage in natural conversations. The project combines FastRTC for real-time communication, multiple speech services, and LiteLLM for flexible model support.
 
-## Features
+## ✨ Features
 
 - Real-time voice conversations in multiple languages
-- Speech-to-Text (ElevenLabs, Groq, OpenAI)
-- Text-to-Speech (ElevenLabs)
+- **Model-agnostic architecture**: Mix and match different providers for each component
+- Speech-to-Text: ElevenLabs, Groq, OpenAI
+- Text-to-Speech: ElevenLabs, Kokoro
 - Web interface or phone number access (Gradio)
 - Fully customizable assistant persona
-- LLM-agnostic: easily switch between OpenAI, Gemini, Ollama, and OpenRouter
+- LLM-agnostic: easily switch between OpenAI, Gemini, Groq, Ollama, and OpenRouter
 - Automatic fallback to alternative models if primary model fails
 - Session-based chat history for context-aware conversations
 - Clean, modular class-based architecture
+- Environment variables and command-line arguments for flexible configuration
 
-## Prerequisites
-- ElevenLabs API key
-- API key for your preferred LLM provider (OpenAI, Gemini, or OpenRouter)
-- Optional: Groq or OpenAI API key for speech-to-text
+## 🔧 Prerequisites
+- API keys for your preferred providers
 - Microphone
 - For local models: Ollama installed and running
 
-## How to use
+## 🚀 How to use
 
 1. Clone the repository and navigate to the project directory
 
@@ -41,52 +41,169 @@ A voice-enabled AI assistant that can engage in natural conversations. The proje
 
 4. Set up environment variables:
    ```bash
-   cp .env-example .env
+   cp .env_example .env
    # Edit .env and add your API keys and model settings
    ```
 
-## Architecture
+5. Run the application:
+   ```bash
+   # Default configuration from .env
+   python main.py
+   
+   # Override with command-line arguments
+   python main.py --tts elevenlabs --stt openai --voice custom_voice_id
+   ```
+
+## 🏗️ Architecture
 
 The project follows a modular class-based design:
 
 - **Agent**: Coordinates conversation flow and manages the interaction between components
 - **LLMService**: Handles communication with different LLM providers through LiteLLM
 - **ChatHistory**: Manages conversation history and context
-- **SpeechService**: Handles both text-to-speech and speech-to-text using ElevenLabs
+- **SpeechService**: Handles both text-to-speech and speech-to-text using multiple providers
 
-## LLM Configuration
+## 🧩 Provider Configuration Examples
+
+### 🌐 Full Cloud Setup (Default)
+Using cloud services for all components:
+
+```
+# Speech service
+TTS_PROVIDER=elevenlabs
+STT_PROVIDER=elevenlabs
+
+# LLM
+LLM_PROVIDER=openai
+OPENAI_LLM_MODEL=gpt-3.5-turbo
+```
+
+### 💻 Full Local Setup
+Running everything locally:
+
+```
+# Speech service
+TTS_PROVIDER=kokoro
+STT_PROVIDER=openai  # Currently no local STT option
+
+# LLM
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=llama3.1:8b
+OLLAMA_API_BASE=http://localhost:11434
+```
+
+### 🔄 Hybrid Setup (Local LLM, Cloud Speech)
+Local LLM with cloud speech services:
+
+```
+# Speech service
+TTS_PROVIDER=elevenlabs
+STT_PROVIDER=elevenlabs
+
+# LLM
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=llama3.1:8b
+```
+
+### 🔄 Hybrid Setup (Cloud LLM, Mixed Speech)
+Cloud LLM with mixed speech services:
+
+```
+# Speech service
+TTS_PROVIDER=kokoro  # Local TTS
+STT_PROVIDER=openai  # Cloud STT
+
+# LLM
+LLM_PROVIDER=openai
+OPENAI_LLM_MODEL=gpt-3.5-turbo
+```
+
+## 🔄 Speech Service Configuration
+
+The system supports multiple providers for both speech-to-text and text-to-speech:
+
+### 🎤 Speech-to-Text Providers
+
+#### ElevenLabs
+```
+STT_PROVIDER=elevenlabs
+ELEVENLABS_API_KEY=your_elevenlabs_api_key
+ELEVENLABS_STT_MODEL=scribe_v1
+ELEVENLABS_STT_LANGUAGE=ita
+```
+
+#### Groq
+```
+STT_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key
+GROQ_STT_MODEL=whisper-large-v3-turbo
+GROQ_STT_LANGUAGE=it
+```
+
+#### OpenAI
+```
+STT_PROVIDER=openai
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_STT_MODEL=gpt-4o-transcribe
+OPENAI_STT_LANGUAGE=it
+```
+
+### 🔊 Text-to-Speech Providers
+
+#### ElevenLabs
+```
+TTS_PROVIDER=elevenlabs
+ELEVENLABS_API_KEY=your_elevenlabs_api_key
+ELEVENLABS_VOICE_ID=JBFqnCBsd6RMkjVDRZzb
+ELEVENLABS_TTS_MODEL=eleven_multilingual_v2
+ELEVENLABS_LANGUAGE=it
+```
+
+#### Kokoro
+```
+TTS_PROVIDER=kokoro
+KOKORO_VOICE=im_nicola
+KOKORO_LANGUAGE=i
+TTS_SPEED=1.0  # Adjust speech speed
+```
+
+## 🧠 LLM Configuration
 
 This project uses LiteLLM to support multiple LLM providers. Configure your preferred model in the `.env` file:
 
 ### Local Models with Ollama
 
 ```
-LLM_MODE=local
+LLM_PROVIDER=ollama
 OLLAMA_MODEL=llama3.1:8b
 OLLAMA_API_BASE=http://localhost:11434
 ```
 
 ### Cloud Models
 
-For OpenAI:
+#### OpenAI
 ```
-LLM_MODE=cloud
 LLM_PROVIDER=openai
 OPENAI_API_KEY=your_key_here
 OPENAI_LLM_MODEL=gpt-3.5-turbo
 ```
 
-For Google Gemini:
+#### Google Gemini
 ```
-LLM_MODE=cloud
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your_key_here
-GEMINI_MODEL=gemini-pro
+GEMINI_MODEL=gemini-1.5-flash
 ```
 
-For OpenRouter (access to many models):
+#### Groq
 ```
-LLM_MODE=cloud
+LLM_PROVIDER=groq
+GROQ_API_KEY=your_key_here
+GROQ_LLM_MODEL=llama-3.1-8b-instant
+```
+
+#### OpenRouter (access to many models)
+```
 LLM_PROVIDER=openrouter
 OPENROUTER_API_KEY=your_key_here
 OPENROUTER_MODEL=qwen/qwq-32b:free
@@ -106,41 +223,12 @@ The system maintains conversation context by storing recent messages in session 
 You can configure how many messages to keep in the context:
 
 ```
-MAX_HISTORY_MESSAGES=10
+MAX_HISTORY_MESSAGES=5
 ```
 
 To clear the chat history during a conversation, just say "clear history", "reset chat", or "nuova conversazione".
 
-## Speech-to-Text Configuration
-
-The project supports multiple STT providers:
-
-### ElevenLabs (default)
-```
-ELEVENLABS_API_KEY=your_elevenlabs_api_key
-ELEVENLABS_STT_LANGUAGE=en
-```
-
-### Groq
-```
-GROQ_API_KEY=your_groq_api_key
-GROQ_STT_MODEL=whisper-large-v3-turbo
-GROQ_STT_LANGUAGE=en
-```
-
-### OpenAI
-```
-OPENAI_API_KEY=your_openai_api_key
-OPENAI_STT_MODEL=gpt-4o-transcribe
-OPENAI_STT_LANGUAGE=en
-```
-
-To select your preferred STT provider, set:
-```
-DEFAULT_STT_PROVIDER=elevenlabs  # or groq or openai
-```
-
-## Running the Application
+## 🚀 Running the Application
 
 Start the application with the web interface:
 ```bash
@@ -152,18 +240,27 @@ Or get a temporary phone number for voice calls:
 python main.py --phone
 ```
 
-## How it Works
+Override environment settings with command-line arguments:
+```bash
+# Use Kokoro TTS with a specific voice and speed
+python main.py --tts kokoro --voice im_nicola --speed 1.0
+
+# Use OpenAI for speech recognition
+python main.py --stt openai --tts elevenlabs
+```
+
+## ⚙️ How it Works
 
 1. The system captures your voice input
-2. Converts speech to text using ElevenLabs
+2. Converts speech to text using your configured STT provider
 3. Sends the text to your configured LLM via LiteLLM
-4. Converts the response to speech using ElevenLabs
+4. Converts the response to speech using your configured TTS provider
 5. Plays back the audio response
 
-## Extending the Project
+## 🔌 Extending the Project
 
 The modular design makes it easy to extend the project:
 
 - Add new LLM providers by extending the LLMService class
-- Support additional speech services by creating alternate implementations of SpeechService
+- Support additional speech services by creating alternate implementations
 - Create custom agents with different behaviors by extending the Agent class
