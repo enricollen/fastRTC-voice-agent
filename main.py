@@ -22,7 +22,8 @@ speech_service = None
 agent = Agent()
 voice_id = None  
 speed = 1.0  # just for kokoro
-tts_provider = "elevenlabs"  # default provider
+tts_provider = "elevenlabs"  # default tts provider
+stt_provider = "elevenlabs"  # default stt provider
 
 def response(
     audio: tuple[int, np.ndarray],
@@ -39,7 +40,12 @@ def response(
     logger.info("🎙️ Received audio input")
 
     logger.debug("🔄 Transcribing audio...")
-    transcript = speech_service.speech_to_text(audio)
+    # set STT parameters based on the active provider
+    stt_kwargs = {}
+    if stt_provider == "groq":
+        stt_kwargs["response_format"] = "text"
+        
+    transcript = speech_service.speech_to_text(audio, **stt_kwargs)
     logger.info(f'👂 Transcribed: "{transcript}"')
     
     logger.debug("🧠 Running agent...")
@@ -93,6 +99,12 @@ if __name__ == "__main__":
         help="TTS provider to use (elevenlabs or kokoro)",
     )
     parser.add_argument(
+        "--stt", 
+        choices=["elevenlabs", "groq"], 
+        default="elevenlabs",
+        help="STT provider to use (elevenlabs or groq)",
+    )
+    parser.add_argument(
         "--voice", 
         type=str, 
         help="Voice ID/name to use (provider-specific, defaults to provider's default)",
@@ -108,6 +120,7 @@ if __name__ == "__main__":
 
     # configuration in global variables
     tts_provider = args.tts
+    stt_provider = args.stt
     
     # Set default voice ID based on the TTS provider if not specified
     if args.voice is None:
@@ -120,10 +133,11 @@ if __name__ == "__main__":
         
     speed = args.speed
     
-    speech_service = SpeechService(tts_provider=tts_provider)
+    speech_service = SpeechService(tts_provider=tts_provider, stt_provider=stt_provider)
     
     # info about the configuration
     logger.info(f"🔊 Initialized speech service with {tts_provider} TTS provider")
+    logger.info(f"🎤 Initialized speech service with {stt_provider} STT provider")
     if voice_id:
         logger.info(f"Using voice: {voice_id}")
     if tts_provider == "kokoro" and speed != 1.0:

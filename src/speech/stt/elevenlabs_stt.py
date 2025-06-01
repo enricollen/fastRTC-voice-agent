@@ -8,9 +8,10 @@ from typing import Optional, Dict, Any
 from elevenlabs.client import ElevenLabs
 from loguru import logger
 import soundfile as sf
+from .provider import ProviderSTT
 
 
-class ElevenLabsSTT:
+class ElevenLabsSTT(ProviderSTT):
     """elevenlabs implementation of stt provider."""
     
     def __init__(self):
