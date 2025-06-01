@@ -1,7 +1,9 @@
 import argparse
 from typing import Generator, Tuple
 import numpy as np
+import os
 from loguru import logger
+from dotenv import load_dotenv
 from src.speech import SpeechService
 from src.agent import Agent
 from fastrtc import (
@@ -10,6 +12,9 @@ from fastrtc import (
     Stream,
 )
 
+# load environment variables
+load_dotenv()
+
 logger.remove()
 logger.add(
     lambda msg: print(msg),
@@ -17,13 +22,23 @@ logger.add(
     format="<green>{time:HH:mm:ss}</green> | <level>{level}</level> | <level>{message}</level>",
 )
 
-# Initialize services
+# initialize services with defaults from environment variables
 speech_service = None  
 agent = Agent()
-voice_id = None  
-speed = 1.0  # just for kokoro
-tts_provider = "elevenlabs"  # default tts provider
-stt_provider = "elevenlabs"  # default stt provider
+
+# get defaults from environment variables
+default_tts_provider = os.getenv("TTS_PROVIDER", "elevenlabs").lower()
+default_stt_provider = os.getenv("STT_PROVIDER", "elevenlabs").lower()
+
+# default voice based on provider
+default_voice_id = None
+if default_tts_provider == "elevenlabs":
+    default_voice_id = os.getenv("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb")
+elif default_tts_provider == "kokoro":
+    default_voice_id = os.getenv("KOKORO_VOICE", "im_nicola")
+
+# default speed (only relevant for kokoro)
+default_speed = float(os.getenv("TTS_SPEED", "1.0"))
 
 def response(
     audio: tuple[int, np.ndarray],
@@ -95,25 +110,25 @@ if __name__ == "__main__":
     parser.add_argument(
         "--tts", 
         choices=["elevenlabs", "kokoro"], 
-        default="elevenlabs",
+        default=default_tts_provider,
         help="TTS provider to use (elevenlabs or kokoro)",
     )
     parser.add_argument(
         "--stt", 
         choices=["elevenlabs", "groq", "openai"], 
-        default="elevenlabs",
+        default=default_stt_provider,
         help="STT provider to use (elevenlabs, groq, or openai)",
     )
     parser.add_argument(
         "--voice", 
         type=str, 
         help="Voice ID/name to use (provider-specific, defaults to provider's default)",
-        default=None,
+        default=default_voice_id,
     )
     parser.add_argument(
         "--speed",
         type=float,
-        default=1.0,
+        default=default_speed,
         help="Speech speed multiplier (only applicable for Kokoro TTS)",
     )
     args = parser.parse_args()
@@ -121,27 +136,20 @@ if __name__ == "__main__":
     # configuration in global variables
     tts_provider = args.tts
     stt_provider = args.stt
-    
-    # Set default voice ID based on the TTS provider if not specified
-    if args.voice is None:
-        if args.tts == "elevenlabs":
-            voice_id = "JBFqnCBsd6RMkjVDRZzb"  # default elevenlabs voice id
-        else:  # kokoro
-            voice_id = "im_nicola"  # default kokoro voice
-    else:
-        voice_id = args.voice
-        
+    voice_id = args.voice
     speed = args.speed
     
-    speech_service = SpeechService(tts_provider=tts_provider, stt_provider=stt_provider)
+    speech_service = SpeechService(
+        tts_provider=tts_provider, 
+        stt_provider=stt_provider
+    )
     
     # info about the configuration
     logger.info(f"🔊 Initialized speech service with {tts_provider} TTS provider")
     logger.info(f"🎤 Initialized speech service with {stt_provider} STT provider")
-    if voice_id:
-        logger.info(f"Using voice: {voice_id}")
     if tts_provider == "kokoro" and speed != 1.0:
         logger.info(f"Speech speed: {speed}x")
+    logger.info(f"tts model preloaded during startup")
     
     stream = create_stream()
     logger.info("🎧 Stream handler configured")
