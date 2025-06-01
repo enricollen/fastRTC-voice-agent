@@ -1,5 +1,5 @@
 """
-openai implementation of the stt provider.
+openai implementation of the stt provider. (https://platform.openai.com/docs/api-reference/audio/createTranscription)
 """
 import os
 import io

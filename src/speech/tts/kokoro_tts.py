@@ -16,8 +16,8 @@ class KokoroTTS(ProviderTTS):
     def __init__(self):
         """initialize kokoro provider."""
         self.model = None
-        self.default_voice = os.getenv("KOKORO_VOICE", "im_nicola")
-        self.default_language = os.getenv("KOKORO_LANGUAGE", "i")  # 'a' for american english
+        self.default_voice = os.getenv("KOKORO_VOICE", "im_nicola") # if_sara
+        self.default_language = os.getenv("KOKORO_LANGUAGE", "i") 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.sample_rate = 24000  # kokoro uses 24khz
         self.initialized = False
