@@ -20,7 +20,7 @@ class LLMService:
         
         # model mappings
         self.model_mapping = {
-            "openai": os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
+            "openai": os.getenv("OPENAI_LLM_MODEL", "gpt-3.5-turbo"),
             "ollama": os.getenv("OLLAMA_MODEL", "llama3.1:8b"),
             "gemini": os.getenv("GEMINI_MODEL", "gemini-1.5-flash"),
             "openrouter": os.getenv("OPENROUTER_MODEL", "qwen/qwq-32b:free"),
