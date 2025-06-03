@@ -2,6 +2,14 @@
 
 A model-agnostic voice-enabled AI assistant that can engage in natural conversations. The project combines FastRTC for real-time communication, multiple speech services, and LiteLLM for flexible model support.
 
+## ⚙️ How it Works
+
+1. The system captures your voice input
+2. Converts speech to text using your configured STT provider
+3. Sends the text to your configured LLM via LiteLLM
+4. Converts the response to speech using your configured TTS provider
+5. Plays back the audio response
+
 ## ✨ Features
 
 - Real-time voice conversations in multiple languages
@@ -16,44 +24,6 @@ A model-agnostic voice-enabled AI assistant that can engage in natural conversat
 - Clean, modular class-based architecture
 - Environment variables and command-line arguments for flexible configuration
 
-## 🔧 Prerequisites
-- API keys for your preferred providers
-- Microphone
-- For local models: Ollama installed and running
-
-## 🚀 How to use
-
-1. Clone the repository and navigate to the project directory
-
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv .venv
-   # On Windows
-   .venv\Scripts\activate
-   # On Unix/MacOS
-   source .venv/bin/activate
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Set up environment variables:
-   ```bash
-   cp .env_example .env
-   # Edit .env and add your API keys and model settings
-   ```
-
-5. Run the application:
-   ```bash
-   # Default configuration from .env
-   python main.py
-   
-   # Override with command-line arguments
-   python main.py --tts elevenlabs --stt openai --voice custom_voice_id
-   ```
-
 ## 🏗️ Architecture
 
 The project follows a modular class-based design:
@@ -62,6 +32,11 @@ The project follows a modular class-based design:
 - **LLMService**: Handles communication with different LLM providers through LiteLLM
 - **ChatHistory**: Manages conversation history and context
 - **SpeechService**: Handles both text-to-speech and speech-to-text using multiple providers
+
+## 🔧 Prerequisites
+- API keys for your preferred providers
+- Microphone
+- For local models: Ollama installed and running
 
 ## 🧩 Provider Configuration Examples
 
@@ -79,12 +54,12 @@ OPENAI_LLM_MODEL=gpt-3.5-turbo
 ```
 
 ### 💻 Full Local Setup
-Running everything locally:
+Running (almost) everything locally:
 
 ```
 # Speech service
 TTS_PROVIDER=kokoro
-STT_PROVIDER=openai  # Currently no local STT option
+STT_PROVIDER=openai  # Currently no local STT option :(
 
 # LLM
 LLM_PROVIDER=ollama
@@ -164,7 +139,7 @@ ELEVENLABS_LANGUAGE=it
 TTS_PROVIDER=kokoro
 KOKORO_VOICE=im_nicola
 KOKORO_LANGUAGE=i
-TTS_SPEED=1.0  # Adjust speech speed
+TTS_SPEED=1.0
 ```
 
 ## 🧠 LLM Configuration
@@ -228,39 +203,94 @@ MAX_HISTORY_MESSAGES=5
 
 To clear the chat history during a conversation, just say "clear history", "reset chat", or "nuova conversazione".
 
-## 🚀 Running the Application
+## 🚀 How to use
 
-Start the application with the web interface:
-```bash
-python main.py
-```
+1. Clone the repository and navigate to the project directory
 
-Or get a temporary phone number for voice calls:
-```bash
-python main.py --phone
-```
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv .venv
+   # On Windows
+   .venv\Scripts\activate
+   # On Unix/MacOS
+   source .venv/bin/activate
+   ```
 
-Override environment settings with command-line arguments:
-```bash
-# Use Kokoro TTS with a specific voice and speed
-python main.py --tts kokoro --voice im_nicola --speed 1.0
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-# Use OpenAI for speech recognition
-python main.py --stt openai --tts elevenlabs
-```
+4. Set up environment variables:
+   ```bash
+   cp .env_example .env
+   # Edit .env and add your API keys and model settings
+   ```
 
-## ⚙️ How it Works
+5. Run the application:
+   ```bash
+   # Default configuration from .env
+   python main.py
 
-1. The system captures your voice input
-2. Converts speech to text using your configured STT provider
-3. Sends the text to your configured LLM via LiteLLM
-4. Converts the response to speech using your configured TTS provider
-5. Plays back the audio response
+   # Override with command-line arguments:
+   # Use Kokoro TTS with a specific voice and speed
+   python main.py --tts kokoro --voice im_nicola --speed 1.0
+   # Use OpenAI for speech recognition
+   python main.py --stt openai --tts elevenlabs
+   ```
+   Or get a temporary phone number for voice calls:
+   ```bash
+   python main.py --phone
+   ```
 
-## 🔌 Extending the Project
+## ✅ Todo
 
-The modular design makes it easy to extend the project:
+### completed
+- [x] multiple tts providers (elevenlabs, kokoro)
+- [x] multiple stt providers (elevenlabs, groq, openai)
+- [x] session-based chat history
+- [x] model fallback mechanism
+- [x] environment variable and command-line configuration
+- [x] web interface (gradio)
+- [x] phone number access
+- [x] multi-language support
+- [x] modular class-based architecture
 
-- Add new LLM providers by extending the LLMService class
-- Support additional speech services by creating alternate implementations
-- Create custom agents with different behaviors by extending the Agent class
+### remaining
+- [ ] custom agents with tools
+- [ ] custom web ui
+- [ ] local stt provider support
+- [ ] voice activity detection improvements
+- [ ] noise sound resiliency improvements
+- [ ] add unit tests
+- [ ] docker containerization
+
+## 🤝 how to contribute
+
+contributions are very welcome! :)
+
+### submitting a pull request
+
+1. fork the repository and create your branch from `main`:
+   ```bash
+   git clone https://github.com/yourusername/fastrtc-voice-agent.git
+   cd fastrtc-voice-agent
+   git checkout -b feature/your-feature-name
+   ```
+
+2. make your changes 
+
+4. commit your changes with descriptive messages:
+   ```bash
+   git commit -m "add: new feature description"
+   ```
+
+5. push to your branch:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+6. open a pull request with title and description:
+   - describe what your pr adds or fixes
+   - reference any related issues
+   - explain your implementation approach
