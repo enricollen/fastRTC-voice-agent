@@ -255,13 +255,14 @@ To clear the chat history during a conversation, just say "clear history", "rese
 - [x] phone number access
 - [x] multi-language support
 - [x] modular class-based architecture
+- [x] local stt provider support
 
 ### remaining
 - [ ] custom agents with tools
 - [ ] custom web ui
-- [ ] local stt provider support
 - [ ] voice activity detection improvements
 - [ ] noise sound resiliency improvements
+- [ ] perform tts in chuncks whenever the LLM response is too long
 - [ ] add unit tests
 - [ ] docker containerization
 
