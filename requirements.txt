@@ -17,3 +17,4 @@ kokoro
 torch
 espeakng-loader
 phonemizer-fork
+faster_whisper

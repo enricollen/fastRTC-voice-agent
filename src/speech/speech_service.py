@@ -8,7 +8,7 @@ from loguru import logger
 from dotenv import load_dotenv
 
 from .tts import ProviderTTS, ElevenLabsTTS, KokoroTTS
-from .stt import ProviderSTT, ElevenLabsSTT, GroqSTT, OpenAISTT
+from .stt import ProviderSTT, ElevenLabsSTT, GroqSTT, OpenAISTT, WhisperSTT
 
 load_dotenv()
 
@@ -46,7 +46,8 @@ class SpeechService:
         self.stt_providers: Dict[str, ProviderSTT] = {
             "elevenlabs": ElevenLabsSTT(),
             "groq": GroqSTT(),
-            "openai": OpenAISTT()
+            "openai": OpenAISTT(),
+            "whisper": WhisperSTT()
         }
         
         # set active stt provider

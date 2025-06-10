@@ -59,6 +59,8 @@ def response(
     stt_kwargs = {}
     if stt_provider in ["groq", "openai"]:
         stt_kwargs["response_format"] = "text"
+    elif stt_provider == "whisper":
+        stt_kwargs["beam_size"] = 5
         
     transcript = speech_service.speech_to_text(audio, **stt_kwargs)
     logger.info(f'👂 Transcribed: "{transcript}"')
@@ -115,9 +117,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--stt", 
-        choices=["elevenlabs", "groq", "openai"], 
+        choices=["elevenlabs", "groq", "openai", "whisper"], 
         default=default_stt_provider,
-        help="STT provider to use (elevenlabs, groq, or openai)",
+        help="STT provider to use (elevenlabs, groq, openai, or whisper)",
     )
     parser.add_argument(
         "--voice", 
