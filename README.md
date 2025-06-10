@@ -14,8 +14,8 @@ A model-agnostic voice-enabled AI assistant that can engage in natural conversat
 
 - Real-time voice conversations in multiple languages
 - **Model-agnostic architecture**: Mix and match different providers for each component
-- Speech-to-Text: ElevenLabs, Groq, OpenAI
-- Text-to-Speech: ElevenLabs, Kokoro
+- Speech-to-Text: ElevenLabs, Groq, OpenAI, Whisper (local)
+- Text-to-Speech: ElevenLabs, Kokoro (local)
 - Web interface or phone number access (Gradio)
 - Fully customizable assistant persona
 - LLM-agnostic: easily switch between OpenAI, Gemini, Groq, Ollama, and OpenRouter
@@ -23,6 +23,16 @@ A model-agnostic voice-enabled AI assistant that can engage in natural conversat
 - Session-based chat history for context-aware conversations
 - Clean, modular class-based architecture
 - Environment variables and command-line arguments for flexible configuration
+
+## 🎯 Recommended Configuration
+
+After extensive testing, the following configuration has proven to provide the best balance of latency, accuracy, and overall user experience:
+
+- **Speech-to-Text**: ElevenLabs or Groq (both offer excellent accuracy with low latency)
+- **Text-to-Speech**: ElevenLabs (best voice quality and response time)
+- **LLM Provider**: Google Gemini (specifically gemini flash (1.5 or 2.5) for fastest responses while maintaining high quality)
+
+This setup minimizes overall latency while maintaining high accuracy in speech recognition and natural-sounding responses.
 
 ## 🏗️ Architecture
 
@@ -40,26 +50,26 @@ The project follows a modular class-based design:
 
 ## 🧩 Provider Configuration Examples
 
-### 🌐 Full Cloud Setup (Default)
-Using cloud services for all components:
+### 🌐 Recommended Cloud Setup
+Using the optimal configuration for best performance:
 
 ```
 # Speech service
 TTS_PROVIDER=elevenlabs
-STT_PROVIDER=elevenlabs
+STT_PROVIDER=groq        # or elevenlabs, both perform excellently
 
-# LLM
-LLM_PROVIDER=openai
-OPENAI_LLM_MODEL=gpt-3.5-turbo
+# LLM (fastest responses with high quality)
+LLM_PROVIDER=gemini
+GEMINI_MODEL=gemini-1.5-flash
 ```
 
 ### 💻 Full Local Setup
-Running (almost) everything locally:
+Running everything locally:
 
 ```
 # Speech service
 TTS_PROVIDER=kokoro
-STT_PROVIDER=openai  # Currently no local STT option :(
+STT_PROVIDER=whisper
 
 # LLM
 LLM_PROVIDER=ollama
@@ -121,6 +131,13 @@ STT_PROVIDER=openai
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_STT_MODEL=gpt-4o-transcribe
 OPENAI_STT_LANGUAGE=it
+```
+
+#### Whisper (Local)
+```
+STT_PROVIDER=whisper
+WHISPER_MODEL_SIZE=large-v3
+WHISPER_LANGUAGE=it
 ```
 
 ### 🔊 Text-to-Speech Providers
@@ -237,6 +254,8 @@ To clear the chat history during a conversation, just say "clear history", "rese
    python main.py --tts kokoro --voice im_nicola --speed 1.0
    # Use OpenAI for speech recognition
    python main.py --stt openai --tts elevenlabs
+   # Use local Whisper for speech recognition
+   python main.py --stt whisper --tts kokoro
    ```
    Or get a temporary phone number for voice calls:
    ```bash
