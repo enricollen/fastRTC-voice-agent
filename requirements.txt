@@ -17,4 +17,10 @@ kokoro
 torch
 espeakng-loader
 phonemizer-fork
+# LlamaIndex dependencies
+llama-index
+llama-index-llms-openai
+llama-index-llms-litellm
+google-auth
+
 faster_whisper
