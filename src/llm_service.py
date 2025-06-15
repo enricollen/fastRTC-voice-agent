@@ -4,6 +4,7 @@ LLM service module for handling interactions with language models.
 import os
 from loguru import logger
 import litellm
+from llama_index.llms.litellm import LiteLLM
 
 
 class LLMService:
@@ -41,6 +42,9 @@ class LLMService:
         
         # set current model based on configuration
         self.model = self._get_model_name()
+
+        # initialize LiteLLM instance
+        self.llm = LiteLLM(model=self.model, temperature=self.temperature)
         
         logger.debug(f"LLM Service initialized with provider: {self.llm_provider}, model: {self.model}")
 
@@ -66,6 +70,8 @@ class LLMService:
             model = f"openrouter/{model}"
         elif provider == "groq":
             model = f"groq/{model}"
+        elif provider == "gemini":
+            model = f"gemini/{model}"
         
         return model
 
@@ -129,4 +135,4 @@ class LLMService:
                     logger.error(f"Fallback model {fallback_model} failed: {str(fallback_error)}")
             
             # if all attempts fail ==> error message
-            return "mi dispiace, ma ho un problema di connessione. potresti ripetere la tua domanda?" 
+            return "mi dispiace, ma ho un problema di connessione. potresti ripetere la tua domanda?"

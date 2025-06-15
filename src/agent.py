@@ -6,8 +6,14 @@ import yaml
 from pathlib import Path
 from loguru import logger
 from dotenv import load_dotenv
+from llama_index.core.agent import ReActAgent
+from llama_index.core.tools import FunctionTool
+from llama_index.core.memory import Memory
+from llama_index.core.llms import ChatMessage
+
 from .llm_service import LLMService
-from .chat_history import ChatHistory
+#from .chat_history import ChatHistory
+from .tools import get_weather
 
 load_dotenv()
 
@@ -15,6 +21,7 @@ class Agent:
     """
     AI Agent that coordinates conversation flow between the user and LLM.
     Manages system prompts, chat history, and LLM interactions.
+    Uses LlamaIndex ReAct agent for tool use capabilities.
     """
 
     def __init__(self):
@@ -23,17 +30,61 @@ class Agent:
         config_path = Path(__file__).parent.parent / "config" / "prompts.yaml"
         with open(config_path, 'r', encoding='utf-8') as f:
             prompts_config = yaml.safe_load(f)
-            self.system_prompt = prompts_config['system_prompts']['chef_assistant']
+            self.system_prompt = prompts_config['system_prompts']['weather_expert']
         
-        # initialize chat history and LLM
-        self.chat_history = ChatHistory(self.system_prompt)
         self.llm_service = LLMService()
         
-        logger.debug("Agent initialized with system prompt and services")
+        # initialize tools
+        self.tools = [
+            FunctionTool.from_defaults(
+                fn=get_weather,
+                name="get_weather",
+                description="get current weather in a location, ONLY use this when explicitly asked about weather"
+            )
+        ]
+        
+        # LLamaIndex memory with token limits
+        self.memory = Memory.from_defaults(
+            token_limit=4000, 
+            chat_history_token_ratio=0.8  # 80% of token limit for chat history
+        )
+        
+        # add system prompt to memory
+        self.memory.put_messages([
+            ChatMessage(role="system", content=self.system_prompt)
+        ])
+        
+        # llamaindex react agent
+        self._init_agent()
+        
+        logger.debug("Agent initialized with system prompt, memory and services")
+
+    def _init_agent(self):
+        """Initialize the LlamaIndex ReAct agent with tools."""
+        llm_provider = os.getenv("LLM_PROVIDER", "openai").lower()
+        
+        # get the LiteLLM instance from LLMService
+        llm = self.llm_service.llm
+        
+        # create react agent with tools
+        self.react_agent = ReActAgent.from_tools(
+            self.tools,
+            llm=llm,
+            verbose=True,
+            system_prompt=self.system_prompt
+        )
+        
+        logger.info(f"react agent initialized with llm: {llm_provider} using model: {self.llm_service.model}")
+
+    def _strip_think_tags(self, text: str) -> str:
+        """Remove content between <think> tags from the response."""
+        import re
+        return re.sub(r'<think>.*?</think>\s*\n?', '', text, flags=re.DOTALL).strip()
 
     def invoke(self, input_text: str, config: dict = None):
         """
         Process user input and generate a response using the LLM.
+        Will use tools if needed based on the input.
         
         Args:
             input_text: The user's input text
@@ -47,25 +98,34 @@ class Agent:
         
         logger.info(f'💭 Thinking about: "{input_text}"')
         
-        # get the current chat history
-        messages = self.chat_history.get_messages()
-        
-        # add the new user message for the LLM (not adding to history yet)
-        messages.append({"role": "user", "content": input_text})
-        
-        logger.debug(f"Context length: {len(messages)} messages")
-        
-        # generate response using the LLM
         try:
-            assistant_response = self.llm_service.generate_response(messages)
+            # get current chat history from memory
+            chat_history = self.memory.get()
             
-            # update chat history with this last exchange
-            self.chat_history.add_exchange(input_text, assistant_response)
+            # get react agent response with memory context
+            response = self.react_agent.chat(
+                input_text,
+                chat_history=chat_history
+            )
+            # removing <think> tags
+            assistant_response = self._strip_think_tags(response.response)
+            
+            # add the exchange to memory
+            self.memory.put_messages([
+                ChatMessage(role="user", content=input_text),
+                ChatMessage(role="assistant", content=assistant_response)
+            ])
+            
+            #logger.info(f'💬 agent response: "{assistant_response}"')
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
             assistant_response = "Mi dispiace, ma ho un problema di connessione. Potresti ripetere la tua domanda?"
-            self.chat_history.add_exchange(input_text, assistant_response)
+            # add the failed exchange to memory
+            self.memory.put_messages([
+                ChatMessage(role="user", content=input_text),
+                ChatMessage(role="assistant", content=assistant_response)
+            ])
         
         # return formatted response
         return {
@@ -82,4 +142,12 @@ class Agent:
         Returns:
             bool: True if history was cleared successfully
         """
-        return self.chat_history.clear()
+        self.memory = Memory.from_defaults(
+            token_limit=4000,
+            chat_history_token_ratio=0.8
+        )
+        # re-add system prompt to memory
+        self.memory.put_messages([
+            ChatMessage(role="system", content=self.system_prompt)
+        ])
+        return True
