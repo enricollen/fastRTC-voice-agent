@@ -2,6 +2,8 @@
 
 A model-agnostic voice-enabled AI assistant that can engage in natural conversations. The project combines FastRTC for real-time communication, multiple speech services, and LiteLLM for flexible model support.
 
+[![Video Title](https://img.youtube.com/vi/fjYv0PuJT7k/0.jpg)](https://www.youtube.com/watch?v=fjYv0PuJT7k)
+
 ## ⚙️ How it Works
 
 1. The system captures your voice input
