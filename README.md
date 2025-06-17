@@ -14,10 +14,12 @@ A model-agnostic voice-enabled AI assistant that can engage in natural conversat
 
 - Real-time voice conversations in multiple languages
 - **Model-agnostic architecture**: Mix and match different providers for each component
+- **Intelligent Agent**: LlamaIndex-powered agent with tool usage capabilities
+- **Memory Management**: Token-aware conversation history with configurable limits
 - Speech-to-Text: ElevenLabs, Groq, OpenAI, Whisper (local)
 - Text-to-Speech: ElevenLabs, Kokoro (local)
 - Web interface or phone number access (Gradio)
-- Fully customizable assistant persona
+- Fully customizable assistant persona via YAML configuration
 - LLM-agnostic: easily switch between OpenAI, Gemini, Groq, Ollama, and OpenRouter
 - Automatic fallback to alternative models if primary model fails
 - Session-based chat history for context-aware conversations
@@ -36,12 +38,56 @@ This setup minimizes overall latency while maintaining high accuracy in speech r
 
 ## 🏗️ Architecture
 
-The project follows a modular class-based design:
+![FastRTC Architecture](docs/images/architecture.png)
 
-- **Agent**: Coordinates conversation flow and manages the interaction between components
-- **LLMService**: Handles communication with different LLM providers through LiteLLM
-- **ChatHistory**: Manages conversation history and context
-- **SpeechService**: Handles both text-to-speech and speech-to-text using multiple providers
+The project follows a modular class-based design with multiple components working together to provide a seamless voice interaction experience:
+
+1. **FastRTC**: Handles real-time voice communication
+2. **Speech Services**:
+   - **STT (Speech-to-Text)**: Supports ElevenLabs, OpenAI, Groq, and local Whisper
+   - **TTS (Text-to-Speech)**: Supports ElevenLabs and local Kokoro TTS
+3. **LiteLLM**: Provides unified access to multiple LLM providers:
+   - OpenRouter
+   - Google Gemini
+   - OpenAI
+   - Groq
+   - Local Ollama
+4. **Agent Framework**: A Llamaindex ReAct agent orchestrates the conversation flow with:
+   - Weather Tool integration (example)
+   - Memory management
+
+## 🛠️ Agent Configuration
+
+The agent can be configured through environment variables and YAML files:
+
+### System Prompts
+Located in `config/prompts.yaml`:
+```yaml
+system_prompts:
+  weather_expert: |
+    You are a helpful weather expert assistant...
+  chef_assistant: |
+    You are a knowledgeable cooking assistant...
+```
+
+### Tools Configuration
+The agent supports various tools that can be enabled/disabled:
+```python
+# Example tool configuration
+tools = [
+    {
+        "name": "get_weather",
+        "description": "Get current weather in a location"
+    }
+]
+```
+
+### Memory Settings
+```python
+# Token limits for conversation history
+MEMORY_TOKEN_LIMIT=4000        # Total memory token limit
+CHAT_HISTORY_RATIO=0.8         # Ratio for chat history (80% of total)
+```
 
 ## 🔧 Prerequisites
 - API keys for your preferred providers
@@ -105,7 +151,7 @@ OPENAI_LLM_MODEL=gpt-3.5-turbo
 
 ## 🔄 Speech Service Configuration
 
-The system supports multiple providers for both speech-to-text and text-to-speech:
+The system supports multiple providers for speech-to-text, text-to-speech and LLMs:
 
 ### 🎤 Speech-to-Text Providers
 
@@ -208,17 +254,6 @@ You can specify fallback models in case your primary model fails:
 ```
 LLM_FALLBACKS=gpt-3.5-turbo,ollama/llama3.1:8b
 ```
-
-### Chat History
-
-The system maintains conversation context by storing recent messages in session memory. 
-You can configure how many messages to keep in the context:
-
-```
-MAX_HISTORY_MESSAGES=5
-```
-
-To clear the chat history during a conversation, just say "clear history", "reset chat", or "nuova conversazione".
 
 ## 🚀 How to use
 
