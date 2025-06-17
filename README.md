@@ -2,6 +2,8 @@
 
 A model-agnostic voice-enabled AI assistant that can engage in natural conversations. The project combines FastRTC for real-time communication, multiple speech services, and LiteLLM for flexible model support.
 
+Demo:
+
 [![Video Title](https://img.youtube.com/vi/fjYv0PuJT7k/0.jpg)](https://www.youtube.com/watch?v=fjYv0PuJT7k)
 
 ## ⚙️ How it Works
@@ -28,16 +30,6 @@ A model-agnostic voice-enabled AI assistant that can engage in natural conversat
 - Clean, modular class-based architecture
 - Environment variables and command-line arguments for flexible configuration
 
-## 🎯 Recommended Configuration
-
-After extensive testing, the following configuration has proven to provide the best balance of latency, accuracy, and overall user experience:
-
-- **Speech-to-Text**: ElevenLabs or Groq (both offer excellent accuracy with low latency)
-- **Text-to-Speech**: ElevenLabs (best voice quality and response time)
-- **LLM Provider**: Google Gemini (specifically gemini flash (1.5 or 2.5) for fastest responses while maintaining high quality)
-
-This setup minimizes overall latency while maintaining high accuracy in speech recognition and natural-sounding responses.
-
 ## 🏗️ Architecture
 
 ![FastRTC Architecture](docs/images/architecture.png)
@@ -57,6 +49,16 @@ The project follows a modular class-based design with multiple components workin
 4. **Agent Framework**: A Llamaindex ReAct agent orchestrates the conversation flow with:
    - Weather Tool integration (example)
    - Memory management
+
+## 🎯 Recommended Configuration
+
+After extensive testing, the following configuration has proven to provide the best balance of latency, accuracy, and overall user experience:
+
+- **Speech-to-Text**: ElevenLabs or Groq (both offer excellent accuracy with low latency)
+- **Text-to-Speech**: ElevenLabs (best voice quality and response time)
+- **LLM Provider**: Google Gemini (specifically gemini flash (1.5 or 2.5) for fastest responses while maintaining high quality)
+
+This setup minimizes overall latency while maintaining high accuracy in speech recognition and natural-sounding responses.
 
 ## 🛠️ Agent Configuration
 
