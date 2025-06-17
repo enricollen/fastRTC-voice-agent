@@ -277,9 +277,9 @@ To clear the chat history during a conversation, just say "clear history", "rese
 - [x] multi-language support
 - [x] modular class-based architecture
 - [x] local stt provider support
+- [x] custom agents with tools
 
 ### remaining
-- [ ] custom agents with tools
 - [ ] custom web ui
 - [ ] voice activity detection improvements
 - [ ] noise sound resiliency improvements
