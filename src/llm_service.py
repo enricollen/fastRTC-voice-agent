@@ -135,4 +135,4 @@ class LLMService:
                     logger.error(f"Fallback model {fallback_model} failed: {str(fallback_error)}")
             
             # if all attempts fail ==> error message
-            return "mi dispiace, ma ho un problema di connessione. potresti ripetere la tua domanda?"
+            return "i'm sorry, but i'm having trouble connecting to the server. please try again later."
