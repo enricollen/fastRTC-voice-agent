@@ -22,7 +22,7 @@ Demo:
 - **Memory Management**: Token-aware conversation history with configurable limits
 - Speech-to-Text: ElevenLabs, Groq, OpenAI, Whisper (local)
 - Text-to-Speech: ElevenLabs, Kokoro (local)
-- Web interface or phone number access (Gradio)
+- Web interface with custom UI or Gradio standard UI
 - Fully customizable assistant persona via YAML configuration
 - LLM-agnostic: easily switch between OpenAI, Gemini, Groq, Ollama, and OpenRouter
 - Automatic fallback to alternative models if primary model fails
@@ -259,6 +259,18 @@ You can specify fallback models in case your primary model fails:
 LLM_FALLBACKS=gpt-3.5-turbo,ollama/llama3.1:8b
 ```
 
+## 🌐 Web Interface Options
+
+This project offers two web interface options:
+
+### Gradio Interface (`main.py`)
+- **Easier web interface** with record/play buttons
+- **Phone number access** for voice calls via temporary numbers
+- **Command-line configuration options** for quick testing
+
+### Custom Web UI (`main_custom_ui.py`)
+- **Live transcript display** showing both your speech and AI responses in a chat
+
 ## 🚀 How to use
 
 1. Clone the repository and navigate to the project directory
@@ -284,6 +296,15 @@ LLM_FALLBACKS=gpt-3.5-turbo,ollama/llama3.1:8b
    ```
 
 5. Run the application:
+   
+   **Custom Web UI (recommended):**
+   ```bash
+   # Run with custom web interface
+   python main_custom_ui.py
+   ```
+   Visit localhot:8000 and be patient, it may take a while to load all the modules and show the UI.
+   
+   **Gradio Interface:**
    ```bash
    # Default configuration from .env
    python main.py
@@ -315,12 +336,12 @@ LLM_FALLBACKS=gpt-3.5-turbo,ollama/llama3.1:8b
 - [x] modular class-based architecture
 - [x] local stt provider support
 - [x] custom agents with tools
+- [x] custom web ui with chat displaying messages
 
 ### remaining
-- [ ] custom web ui
 - [ ] voice activity detection improvements
 - [ ] noise sound resiliency improvements
-- [ ] perform tts in chuncks whenever the LLM response is too long
+- [ ] perform tts in chunks whenever the LLM response is too long
 - [ ] add unit tests
 - [ ] docker containerization
 
