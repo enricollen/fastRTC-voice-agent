@@ -3,12 +3,8 @@ python-dotenv
 fastrtc
 loguru
 ollama
-langchain-community
-langchain-ollama
-langgraph
 fastrtc[vad]
 python-soundfile
-soundfile
 litellm
 groq
 openai
