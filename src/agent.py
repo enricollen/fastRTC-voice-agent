@@ -7,9 +7,8 @@ from pathlib import Path
 from loguru import logger
 from dotenv import load_dotenv
 from llama_index.core.agent.workflow import ReActAgent
+from llama_index.core.workflow import Context
 from llama_index.core.tools import FunctionTool
-from llama_index.core.memory import Memory
-from llama_index.core.llms import ChatMessage
 
 from .llm_service import LLMService
 #from .chat_history import ChatHistory
@@ -43,21 +42,11 @@ class Agent:
             )
         ]
         
-        # LLamaIndex memory with token limits
-        self.memory = Memory.from_defaults(
-            token_limit=4000, 
-            chat_history_token_ratio=0.8  # 80% of token limit for chat history
-        )
-        
-        # add system prompt to memory
-        self.memory.put_messages([
-            ChatMessage(role="system", content=self.system_prompt)
-        ])
-        
-        # llamaindex react agent
+        # llamaindex react agent and context for conversation history
         self._init_agent()
+        self.ctx = None  # context will be created on first use
         
-        logger.debug("Agent initialized with system prompt, memory and services")
+        logger.debug("Agent initialized with system prompt and services")
 
     def _init_agent(self):
         """Initialize the LlamaIndex ReAct agent with tools."""
@@ -123,11 +112,6 @@ class Agent:
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
             assistant_response = "Mi dispiace, ma ho un problema di connessione. Potresti ripetere la tua domanda?"
-            # add the failed exchange to memory
-            self.memory.put_messages([
-                ChatMessage(role="user", content=input_text),
-                ChatMessage(role="assistant", content=assistant_response)
-            ])
         
         # return formatted response
         return {
@@ -144,12 +128,6 @@ class Agent:
         Returns:
             bool: True if history was cleared successfully
         """
-        self.memory = Memory.from_defaults(
-            token_limit=4000,
-            chat_history_token_ratio=0.8
-        )
-        # re-add system prompt to memory
-        self.memory.put_messages([
-            ChatMessage(role="system", content=self.system_prompt)
-        ])
+        # reset context to clear conversation history
+        self.ctx = None
         return True
