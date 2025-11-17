@@ -6,7 +6,7 @@ import yaml
 from pathlib import Path
 from loguru import logger
 from dotenv import load_dotenv
-from llama_index.core.agent import ReActAgent
+from llama_index.core.agent.workflow import ReActAgent
 from llama_index.core.tools import FunctionTool
 from llama_index.core.memory import Memory
 from llama_index.core.llms import ChatMessage
@@ -67,8 +67,10 @@ class Agent:
         llm = self.llm_service.llm
         
         # create react agent with tools
-        self.react_agent = ReActAgent.from_tools(
-            self.tools,
+        self.react_agent = ReActAgent(
+            #name="Assistant",
+            #description="An AI assistant that can help with various tasks",
+            tools=self.tools,
             llm=llm,
             verbose=True,
             system_prompt=self.system_prompt
@@ -80,6 +82,16 @@ class Agent:
         """Remove content between <think> tags from the response."""
         import re
         return re.sub(r'<think>.*?</think>\s*\n?', '', text, flags=re.DOTALL).strip()
+
+    async def _run_agent_async(self, input_text: str):
+        """async helper to run the agent with context."""
+        # create context on first use to store conversation history
+        if self.ctx is None:
+            self.ctx = Context(self.react_agent)
+        
+        # run agent and await response
+        handler = self.react_agent.run(user_msg=input_text, ctx=self.ctx)
+        return await handler
 
     def invoke(self, input_text: str, config: dict = None):
         """
@@ -99,22 +111,12 @@ class Agent:
         logger.info(f'💭 Thinking about: "{input_text}"')
         
         try:
-            # get current chat history from memory
-            chat_history = self.memory.get()
+            # run the async agent in sync context
+            import asyncio
+            response = asyncio.run(self._run_agent_async(input_text))
             
-            # get react agent response with memory context
-            response = self.react_agent.chat(
-                input_text,
-                chat_history=chat_history
-            )
             # removing <think> tags
-            assistant_response = self._strip_think_tags(response.response)
-            
-            # add the exchange to memory
-            self.memory.put_messages([
-                ChatMessage(role="user", content=input_text),
-                ChatMessage(role="assistant", content=assistant_response)
-            ])
+            assistant_response = self._strip_think_tags(str(response))
             
             #logger.info(f'💬 agent response: "{assistant_response}"')
             
